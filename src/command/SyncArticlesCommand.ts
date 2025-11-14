@@ -44,10 +44,22 @@ export default class SyncArticlesCommand implements Command {
   }
 
   private getFilename(wallabagArticle: WallabagArticle): string {
-    const filename = wallabagArticle.title.replaceAll(/[\\,#%&{}/*<>$"@.?]/g, ' ').replaceAll(/[:|]/g, ' ');
+    const MAX_FILENAME_LENGTH = 200; // Maximum allowed filename length in Windows
+    const allowedCharacters = /[^a-zA-Z0-9\s\-_]/g; // Whitelist: letters, numbers, spaces, hyphens, and underscores
+
+    // Replace disallowed characters with a space
+    let filename = wallabagArticle.title.replace(allowedCharacters, ' ');
+
     if (this.plugin.settings.idInTitle === 'true') {
+      const filenameWithId = `${filename}-${wallabagArticle.id}`;
+      if (filenameWithId.length > MAX_FILENAME_LENGTH) {
+        filename = filename.substring(0, MAX_FILENAME_LENGTH - 1 - wallabagArticle.id.toString().length);
+      }
       return `${filename}-${wallabagArticle.id}`;
     } else {
+      if (filename.length > MAX_FILENAME_LENGTH) {
+        filename = filename.substring(0, MAX_FILENAME_LENGTH);
+      }
       return filename;
     }
   }
